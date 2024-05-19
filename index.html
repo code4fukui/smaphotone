@@ -1,0 +1,103 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:">
+<script type="module" src="https://code4fukui.github.io/input-pos/input-pos.js"></script>
+
+<header>
+<h1>smaphotone</h1>
+<small>ver 0.1</small>
+</header>
+
+<main>
+<input-pos id=ip1></input-pos>
+<input-pos id=ip2></input-pos>
+<input-pos id=ip3></input-pos>
+<input-pos id=ip4></input-pos>
+</main>
+
+<a href=https://github.com/code4fukui/smaphotone/>src on GitHub</a>
+
+<style>
+body {
+  font-family: sans-serif;
+  text-align: center;
+  background-color: #f5f5dd;
+  color: #112;
+}
+header {
+  padding: .5em 0;
+  line-height: 1;
+}
+h1 {
+  padding: 0;
+  margin: 0;
+}
+small {
+  font-size: 80%;
+  padding: 0;
+  margin: 0;
+}
+main {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  margin-bottom: 2em;
+}
+input-pos {
+  height: 70vh;
+  margin: .5em;
+  background-color: #222;
+}
+a {
+  color: gray !important;
+}
+</style>
+
+<script type="module">
+const audioCtx = new AudioContext();
+
+const createOscillator = (type = "sawtooth") => {
+  const oscillator = audioCtx.createOscillator();
+  if (type == "custom") {
+    // https://developer.mozilla.org/ja/docs/Web/API/BaseAudioContext/createPeriodicWave
+    const real = new Float32Array(3);
+    const imag = new Float32Array(3);
+
+    real[0] = 0;
+    imag[0] = 0;
+    real[1] = .5;
+    imag[1] = 0;
+    real[2] = .5;
+    imag[2] = 0;
+
+    const wave = audioCtx.createPeriodicWave(real, imag, { disableNormalization: true });
+    oscillator.setPeriodicWave(wave);
+  } else {
+    oscillator.type = type;
+  }
+  return oscillator;
+};
+
+const ips = [ip1, ip2, ip3, ip4];
+for (const ip of ips) {
+  ip.onpress = () => {
+    if (!ip.init) {
+      ip.init = true;
+      const type = "sawtooth";
+      ip.oscillator = createOscillator(type);
+      ip.gainNode = audioCtx.createGain();
+      ip.oscillator.connect(ip.gainNode);
+      ip.gainNode.connect(audioCtx.destination);
+      ip.oscillator.start(audioCtx.currentTime);
+    }
+    const freq = 220 + ip.value * 440;
+    ip.oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    ip.gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+
+    ip.oninput = () => {
+      const freq = 220 + ip.value * 440;
+      ip.oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    };
+    ip.onrelease = () => {
+      ip.gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+    };
+  };
+};
+</script>
