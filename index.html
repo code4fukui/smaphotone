@@ -3,7 +3,7 @@
 
 <header>
 <h1>smaphotone</h1>
-<small>ver 0.1</small>
+<small>ver 0.2</small>
 </header>
 
 <main>
@@ -87,7 +87,9 @@ for (const ip of ips) {
       ip.gainNode.connect(audioCtx.destination);
       ip.oscillator.start(audioCtx.currentTime);
     }
-    const freq = 220 + ip.value * 440;
+    const freqmin = 220;
+    const freqmax = 880;
+    const freq = freqmin + ip.value * (freqmax - freqmin);
     ip.oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
     ip.gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
 
